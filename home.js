@@ -1,28 +1,23 @@
-async function searchUsers (query) {
+function renderUsers() {
 
-    formattedQuery = query.split(", ").join(",").replace(" ", "_")
+    let users = localStorage.getItem("githubSavedUsers")
 
-    try {
-        const res = await fetch('https://api.github.com/search/users?q=' + query + '&query=');
-        const data = await res.json();
-        return(data);
+    const usersContainer = document.getElementById("saved-users-container");
+    usersContainer.innerHTML = ''
+
+    if( users == null || users == '{}' ){
+        noUserTextNode = document.createElement("h6");
+        noUserTextNode.innerText = "No user saved!";
+        usersContainer.appendChild(noUserTextNode);
+        return
+    } else {
+        users = JSON.parse(users);
     }
-    catch (e) { 
-        console.log(e)
-    }
-}
 
-async function onSearch(query = 'roc') {
-    let usersQuery = await searchUsers(query);
-    console.log(usersQuery);
-    renderUsers(usersQuery.items);
+    usersEntries = Object.entries(users);
+    usersEntries.forEach(userEntry => {
 
-}
-
-function renderUsers(users) {
-
-    const usersContainer = document.getElementById("user-search-results-container")
-    users.forEach(user => {
+        const user = userEntry[1];
         
         const userCard = document.createElement("div");
         userCard.classList.add("card", "text-white", "bg-dark", "mb-3");
@@ -72,10 +67,21 @@ function renderUsers(users) {
         userCardBody2.classList.add("card-body");        
 
         const userCardLink = document.createElement("a"); 
-        userCardLink.classList.add("card-link");
+        userCardLink.classList.add("card-link", "text-align-right");
         userCardLink.href = user.html_url;
         userCardLink.innerText = "Profile"
+
+        const userCardCross = document.createElement("i");
+        userCardCross.classList.add("bi", "bi-x-lg");
+        userCardCross.style.color = "white";
+        userCardCross.addEventListener("click", (event) => {
+            let oldList = JSON.parse(localStorage.getItem("githubSavedUsers"))
+            delete oldList[user.login];
+            localStorage.setItem("githubSavedUsers", JSON.stringify(oldList))
+            renderUsers()        
+        })
         
+        userCardBody2.appendChild(userCardCross);
         userCardBody2.appendChild(userCardLink);
 
         /*
@@ -88,4 +94,4 @@ function renderUsers(users) {
 
 }
 
-onSearch();
+renderUsers();
